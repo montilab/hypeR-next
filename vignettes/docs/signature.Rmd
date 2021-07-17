@@ -1,0 +1,115 @@
+---
+title: "Signature Extension"
+vignette: >
+  %\VignetteIndexEntry{Signature Extension}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, comment="")
+devtools::load_all(".")
+library(igraph)
+library(hypeR)
+library(dplyr)
+library(tibble)
+library(ggplot2)
+
+data(ig)
+set.seed(1)
+layout <- igraph::layout_with_graphopt(ig, 
+                                       start=NULL, 
+                                       niter=1000,
+                                       charge=0.005,
+                                       mass=30, 
+                                       spring.length=0,
+                                       spring.constant=1, 
+                                       max.sa.movement=5)
+```
+
+### Extending a signature in a network context
+
+Using similar methods, we can take a pre-defined signature, and contextualize it based on the existing network structure. We can see which signature genes are present in the network, which signature genes are most central, or which non-signature genes are within close proximity.
+
+Let's pretend our signature happened to be a bunch of genes from one of our simulated communities...
+
+```{r}
+signature <- c("ATP2B1", "KLF6", "IL1A", "CD69", "GCH1", "MXD1", "F3")
+```
+
+Here you are passing in node symbols. The symbols are mapped to the unique node identifiers which is what are used for network propagation. That means if you have unique nodes multi-mapping to non-unique gene symbols, you'll will have multiple propagation values for duplicated symbols.
+
+```{r}
+ig.s <- extend_signature(ig, signature, restart=0.5)
+```
+
+```{r}
+head(igraph::as_data_frame(ig.s, what="vertices"))
+```
+
+Here we can visualize the propagation throughout the network from the signature.
+
+```{r, fig.width=12, fig.height=6}
+par(mar=c(0,0,0,0))
+plot(ig.s,
+     vertex.size=4,
+     vertex.color=V(ig.s)$pcolor,
+     vertex.label=NA,
+     edge.width=1,
+     layout=layout)
+```
+
+Here we return the new signature based on the ranked propagation from the original signature.
+
+```{r}
+df <- ig.s %>%
+      igraph::as_data_frame(what="vertices") %>%
+      dplyr::arrange(desc(p)) %>%
+      dplyr::mutate(np=normalize_range(p, 0, 1)) %>%
+      dplyr::select(symbol, p, np) %>% 
+      dplyr::mutate(original_signature = symbol %in% signature)
+
+head(df, 10)
+```
+
+```{r}
+extended_signature <- df %>%
+  dplyr::select(symbol, np) %>%
+  tibble::deframe()
+
+head(extended_signature, 15)
+```
+
+The original signature will likely have the most propagation values (because that is the seed), but we can find other genes with high propagation values close to the signature within the network.
+
+```{r}
+p <- df %>%
+    dplyr::filter(!original_signature) %>%
+    head(25) %>%
+    dplyr::mutate(name=factor(symbol, levels=symbol)) %>%
+    ggplot(aes(x=name, y=np, fill=p))  +
+    geom_bar(stat="identity") +
+    labs(x="Extended Symbols", y="Normalized Propogation") +
+    scale_fill_viridis_c() +
+    theme_classic() +
+    theme(axis.text.x=element_text(angle=45, vjust=1, hjust=1))
+
+p
+```
+
+```{r, fig.width=12, fig.height=6}
+par(mar=c(0,0,0,0))
+plot(ig.s,
+     vertex.size=3,
+     vertex.color=V(ig.s)$pcolor,
+     vertex.frame.color=adjustcolor("#000000", alpha.f=0.5),
+     vertex.label=ifelse(V(ig.s)$p > 0.01, V(ig.s)$symbol, NA),
+     vertex.label.family="Helvetica",
+     vertex.label.color="black",
+     vertex.label.font=2,
+     vertex.label.cex=0.8,
+     edge.width=1,
+     layout=layout)
+```
