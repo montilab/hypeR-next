@@ -1,4 +1,4 @@
-Package: hypeR_next
+Package: hypeR.next
 Title: Network Enrichment
 Authors@R: c(person(given="Anthony", family="Federico", email="anfed@bu.edu", 
              role=c("aut", "cre")),
@@ -14,6 +14,9 @@ RoxygenNote: 7.1.1
 LazyData: false
 Imports:
     hypeR,
+    dplyr,
+    tibble,
+    visNetwork,
     igraph,
     dnet
 Suggests:

@@ -1,0 +1,31 @@
+url: https://github.com/montilab/hypeR-next
+
+development:
+  mode: auto
+
+template:
+  params:
+    bootswatch: cosmo
+
+authors:
+  Anthony Federico:
+    href: https://github.com/anfederico
+  Stefano Monti:
+    href: https://github.com/tetomonti
+
+navbar:
+  title: "hypeR-next"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Docs"
+      menu:
+      - text: "Data Example"
+        href: articles/docs/data.html
+      - text: "Network Characterization"
+        href: articles/docs/characterization.html
+      - text: "Signature Extension"
+        href: articles/docs/signature.html
+  right:
+    - icon: fa-github
+      href: https://github.com/montilab/hypeR-next
