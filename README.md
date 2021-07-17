@@ -15,6 +15,10 @@ An extension of hypeR for network enrichment through random walks.
 devtools::install_github("montilab/hypeR-next")
 ```
 
+``` r
+library(hypeR.next)
+```
+
 ### Data
 
 ``` r
@@ -28,7 +32,7 @@ This package works with undirected `igraph` objects or extensions of
 is(ig)
 ```
 
-    #> [1] "igraph"
+    [1] "igraph"
 
 The following vertex attributes are expected at a minimum.
 
@@ -43,13 +47,15 @@ The following vertex attributes are expected at a minimum.
 head(igraph::as_data_frame(ig, what="vertices"))
 ```
 
-    #>        community   color symbol   name
-    #> GMPS           8 #3E134F   GMPS   GMPS
-    #> PDLIM1        15 #9A9800 PDLIM1 PDLIM1
-    #> JUNB          15 #9A9800   JUNB   JUNB
-    #> RER1          17 #50E2BB   RER1   RER1
-    #> ICAM1         14 #A96C00  ICAM1  ICAM1
-    #> NPFFR2        14 #A96C00 NPFFR2 NPFFR2
+``` 
+       community   color symbol   name
+GMPS           8 #3E134F   GMPS   GMPS
+PDLIM1        15 #9A9800 PDLIM1 PDLIM1
+JUNB          15 #9A9800   JUNB   JUNB
+RER1          17 #50E2BB   RER1   RER1
+ICAM1         14 #A96C00  ICAM1  ICAM1
+NPFFR2        14 #A96C00 NPFFR2 NPFFR2
+```
 
 ``` r
 set.seed(1)
