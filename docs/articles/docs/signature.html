@@ -179,6 +179,38 @@ IL6       IL6 0.02915137 0.3211665              FALSE</code></pre>
      layout<span class="op">=</span><span class="va">layout</span><span class="op">)</span></code></pre></div>
 <p><img src="signature_files/figure-html/unnamed-chunk-9-1.png" width="1152"></p>
 </div>
+<div id="contextual-enrichment" class="section level3">
+<h3 class="hasAnchor">
+<a href="#contextual-enrichment" class="anchor"></a>Contextual enrichment</h3>
+<p>Now that we have our network propogation values, we can perform a rank-based enrichment on the extended signature.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">signature.ranked</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">%&gt;%</span>
+  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html">pull</a></span><span class="op">(</span><span class="va">np</span>, <span class="va">symbol</span><span class="op">)</span>
+
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">signature.ranked</span><span class="op">)</span></code></pre></div>
+<pre><code>     KLF6      MXD1        F3      GCH1      CD69    ATP2B1 
+1.0000000 0.9882798 0.9659912 0.9154722 0.8908621 0.8798251 </code></pre>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">tail</a></span><span class="op">(</span><span class="va">signature.ranked</span><span class="op">)</span></code></pre></div>
+<pre><code>  COQ9  RCHY1  UBE2T  ABCA9  IKBKB STEAP3 
+     0      0      0      0      0      0 </code></pre>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/montilab/hypeR">hypeR</a></span><span class="op">)</span>
+<span class="va">genesets</span> <span class="op">&lt;-</span> <span class="fu">hypeR</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/hypeR/man/msigdb_gsets.html">msigdb_gsets</a></span><span class="op">(</span><span class="st">"Homo sapiens"</span>, <span class="st">"H"</span>, clean<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
+
+<span class="co"># Original signature</span>
+<span class="va">hyp.1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/hypeR/man/hypeR.html">hypeR</a></span><span class="op">(</span><span class="va">signature</span>, <span class="va">genesets</span>, test<span class="op">=</span><span class="st">"hypergeometric"</span><span class="op">)</span>
+<span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/hypeR/man/hyp_dots.html">hyp_dots</a></span><span class="op">(</span><span class="va">hyp.1</span><span class="op">)</span> <span class="op">+</span>
+      <span class="fu">labs</span><span class="op">(</span>title<span class="op">=</span><span class="st">"Original Signature"</span><span class="op">)</span>
+
+<span class="co"># Extended signature</span>
+<span class="va">hyp.2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/hypeR/man/hypeR.html">hypeR</a></span><span class="op">(</span><span class="va">signature.ranked</span>, <span class="va">genesets</span>, test<span class="op">=</span><span class="st">"kstest"</span><span class="op">)</span>
+<span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/hypeR/man/hyp_dots.html">hyp_dots</a></span><span class="op">(</span><span class="va">hyp.2</span><span class="op">)</span> <span class="op">+</span>
+      <span class="fu">labs</span><span class="op">(</span>title<span class="op">=</span><span class="st">"Extended Signature"</span><span class="op">)</span>
+
+<span class="fu">ggpubr</span><span class="fu">::</span><span class="fu"><a href="https://rpkgs.datanovia.com/ggpubr/reference/ggarrange.html">ggarrange</a></span><span class="op">(</span><span class="va">p1</span>, <span class="va">p2</span>, ncol<span class="op">=</span><span class="fl">2</span>, nrow<span class="op">=</span><span class="fl">1</span><span class="op">)</span></code></pre></div>
+<p><img src="signature_files/figure-html/unnamed-chunk-11-1.png" width="1152"></p>
+</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

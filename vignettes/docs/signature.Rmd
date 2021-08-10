@@ -16,6 +16,7 @@ library(hypeR)
 library(dplyr)
 library(tibble)
 library(ggplot2)
+library(ggpubr)
 
 data(ig)
 set.seed(1)
@@ -112,4 +113,33 @@ plot(ig.s,
      vertex.label.cex=0.8,
      edge.width=1,
      layout=layout)
+```
+
+### Contextual enrichment
+
+Now that we have our network propogation values, we can perform a rank-based enrichment on the extended signature.
+
+```{r}
+signature.ranked <- df %>%
+  dplyr::pull(np, symbol)
+
+head(signature.ranked)
+tail(signature.ranked)
+```
+
+```{r, fig.width=12}
+library(hypeR)
+genesets <- hypeR::msigdb_gsets("Homo sapiens", "H", clean=TRUE)
+
+# Original signature
+hyp.1 <- hypeR(signature, genesets, test="hypergeometric")
+p1 <- hyp_dots(hyp.1) +
+      labs(title="Original Signature")
+
+# Extended signature
+hyp.2 <- hypeR(signature.ranked, genesets, test="kstest")
+p2 <- hyp_dots(hyp.2) +
+      labs(title="Extended Signature")
+
+ggpubr::ggarrange(p1, p2, ncol=2, nrow=1)
 ```
