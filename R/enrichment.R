@@ -69,7 +69,7 @@ do_rwr <- function(ig, seeds, restart=0.5, normalise="laplacian", verbose=FALSE,
     mat <- matrix(0, nrow=igraph::vcount(ig), ncol=1)
     rownames(mat) <- V(ig)$name
     mat[,1] <- as.integer(rownames(mat) %in% seeds)
-    rwr <- dnet::dRWR(g=ig, normalise=normalise, setSeeds=mat, restart=restart, verbose=verbose, ...)
+    rwr <- random_walk(ig=ig, normalise=normalise, seed_mat=mat, restart=restart, ...)
     p <- rwr[,1]
     names(p) <- rownames(mat)
     return(p)
@@ -320,4 +320,77 @@ extend_signature <- function(ig, signature, restart=0.5) {
     V(ig)$p <- rwr[match(V(ig)$name, names(rwr))]
     V(ig)$pcolor <- colorize(V(ig)$p)
     return(ig)
+}
+
+#' Perform a random walk with restart (personalized page rank) on an igraph given a seed matrix, and return stationary probabilties.
+#' Stripped down and corrected version of dnet: https://rdrr.io/cran/dnet/src/R/dRWR.r
+#'
+#' @param ig igraph object
+#' @param seed_mat (Gene, num_seeds) matrix with prior weights for each gene in a seed set. See seed_matrix.
+#' @param restart the restart probability for RWR
+#' @param normalise Normlization strategy
+#' @return It returns a sparse matrix with stationary probabilities.
+#'
+#' @export
+random_walk <- function(ig, seed_mat, restart = 0.1, normalise = c("row", "column", "laplacian", "none")) {
+  
+  # Type checks
+  stopifnot(is(ig) == "igraph")
+  stopifnot(class(seed_mat) == c("matrix", "array"))
+  normalise <- match.arg(normalise)
+  
+  # Get Adjacency matrix
+  if ("weight" %in% list.edge.attributes(ig)) {
+    adj_mat <- as_adjacency_matrix(ig, attr = "weight")
+    adj_mat[is.na(adj_mat)] <- 0
+    print("Using weighted graph")
+  } else {
+    adj_mat <- as_adjacency_matrix(ig, attr = NULL)
+    adj_mat[is.na(adj_mat)] <- 0
+    print("Using unweighted graph")
+  }
+  
+  # normalise adjacency matrix. DNet::dRWR had the multiplication orders flipped for row and column.
+  if (normalise == "row") {
+    D <- Matrix::Diagonal(x = (Matrix::rowSums(adj_mat))^(-1))
+    nadjM <- D %*% adj_mat
+  } else if (normalise == "column") {
+    D <- Matrix::Diagonal(x = (Matrix::colSums(adj_mat))^(-1))
+    nadjM <- adj_mat %*% D
+  } else if (normalise == "laplacian") {
+    D <- Matrix::Diagonal(x = (Matrix::colSums(adj_mat))^(-0.5))
+    nadjM <- D %*% adj_mat %*% D
+  } else if (normalise == "none") {
+    nadjM <- adjM
+  }
+  
+  ## Stopping Criteria
+  stop_delta <- 1e-5 # L1 norm of successive iterations of Transition Matrix multiplication
+  stop_step <- 500 # maximum steps of iterations
+  
+  # normalise Seed Matrix
+  norm_seed_mat <- seed_mat %*% Matrix::Diagonal(x = (Matrix::colSums(seed_mat))^(-1))
+  
+  ## Initial Variables
+  P0 <- norm_seed_mat
+  PT <- P0
+  r <- restart
+  step <- 0
+  delta <- 1
+  
+  ## Dnet had the matrix multiplication orders flipped
+  while (delta > stop_delta && step <= stop_step) {
+    PX <- (1 - r) * Matrix::t(Matrix::t(PT) %*% nadjM) + r * P0
+    delta <- sum(abs(PX - PT))
+    PT <- PX
+    step <- step + 1
+    
+    if (step > stop_step) {
+      print(paste0("Reached maximum iteration steps. Delta: ", delta))
+    } else if (delta <= stop_delta) {
+      print(paste0("Reached Convergence. Iteration step: ", step))
+    }
+  }
+  
+  return(PX)
 }
